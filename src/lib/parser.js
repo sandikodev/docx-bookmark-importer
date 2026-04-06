@@ -61,14 +61,25 @@ export function generateBookmarkHtml(structure) {
     '<H1>Bookmarks</H1>',
     '<DL><p>',
   ]
-  for (const { folder, items } of structure) {
-    lines.push(`    <DT><H3 ADD_DATE="${ts}">${folder}</H3>`)
-    lines.push('    <DL><p>')
-    for (const { title, url } of items) {
-      lines.push(`        <DT><A HREF="${url}" ADD_DATE="${ts}">${title}</A>`)
-    }
-    lines.push('    </DL><p>')
+
+  const firstIsBar = structure.length > 0 && structure[0].folder === 'Bookmarks bar'
+  const barItems   = firstIsBar ? structure[0].items : []
+  const rest       = firstIsBar ? structure.slice(1) : structure
+
+  lines.push(`    <DT><H3 ADD_DATE="${ts}" PERSONAL_TOOLBAR_FOLDER="true">Bookmarks bar</H3>`)
+  lines.push('    <DL><p>')
+  for (const { title, url } of barItems) {
+    lines.push(`        <DT><A HREF="${url}" ADD_DATE="${ts}">${title}</A>`)
   }
+  for (const { folder, items } of rest) {
+    lines.push(`        <DT><H3 ADD_DATE="${ts}">${folder}</H3>`)
+    lines.push('        <DL><p>')
+    for (const { title, url } of items) {
+      lines.push(`            <DT><A HREF="${url}" ADD_DATE="${ts}">${title}</A>`)
+    }
+    lines.push('        </DL><p>')
+  }
+  lines.push('    </DL><p>')
   lines.push('</DL><p>')
   return lines.join('\n')
 }

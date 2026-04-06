@@ -52,18 +52,15 @@ export function generateBookmarkHtml(structure) {
     '<TITLE>Bookmarks</TITLE>',
     '<H1>Bookmarks</H1>',
     '<DL><p>',
-    `    <DT><H3 ADD_DATE="${ts}" PERSONAL_TOOLBAR_FOLDER="true">Bookmarks bar</H3>`,
-    '    <DL><p>',
   ]
   for (const { folder, items } of structure) {
-    lines.push(`        <DT><H3 ADD_DATE="${ts}">${folder}</H3>`)
-    lines.push('        <DL><p>')
+    lines.push(`    <DT><H3 ADD_DATE="${ts}">${folder}</H3>`)
+    lines.push('    <DL><p>')
     for (const { title, url } of items) {
-      lines.push(`            <DT><A HREF="${url}" ADD_DATE="${ts}">${title}</A>`)
+      lines.push(`        <DT><A HREF="${url}" ADD_DATE="${ts}">${title}</A>`)
     }
-    lines.push('        </DL><p>')
+    lines.push('    </DL><p>')
   }
-  lines.push('    </DL><p>')
   lines.push('</DL><p>')
   return lines.join('\n')
 }

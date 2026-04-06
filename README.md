@@ -92,8 +92,8 @@ The logic was ported to a Svelte web app so anyone can use it without installing
 ### Usage
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 Open `http://localhost:5173`, drag & drop your `.docx` file, preview the folder structure, then download `bookmarks.html`.

@@ -41,6 +41,14 @@ export async function parseDocxBookmarks(file) {
   }
   if (currentFolder !== null) structure.push({ folder: currentFolder, items: currentItems })
 
+  // Deduplicate folder names
+  const seen = {}
+  for (const entry of structure) {
+    const base = entry.folder
+    seen[base] = (seen[base] || 0) + 1
+    if (seen[base] > 1) entry.folder = `${base} (${seen[base]})`
+  }
+
   return structure
 }
 

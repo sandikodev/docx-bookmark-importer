@@ -13,17 +13,26 @@
   let history = $state([])
   let currentFileName = ''
 
-  // i18n helper
-  const t = (key) => isExtension ? chrome.i18n.getMessage(key) : {
-    dropLabel: 'Drag & drop your .docx file here',
-    browseFile: 'Browse file',
-    importToChrome: 'Import to Chrome',
-    downloadHtml: 'Download bookmarks.html',
-    skipDuplicates: 'Skip duplicate URLs',
-    importInto: 'Import into:',
-    recentImports: 'Recent Imports',
-    clear: 'Clear'
-  }[key] || key
+  // i18n helper with placeholder support
+  const t = (key, subs) => {
+    if (isExtension) return chrome.i18n.getMessage(key, subs)
+    const fallbacks = {
+      appName: 'Docx Bookmark Importer',
+      appSubtitle: 'Convert Chrome bookmarks accidentally saved as .docx back to importable .html',
+      dropLabel: 'Drag & drop your .docx file here',
+      browseFile: 'Browse file',
+      importToChrome: 'Import to Chrome',
+      downloadHtml: 'Download bookmarks.html',
+      skipDuplicates: 'Skip duplicate URLs',
+      importInto: 'Import into:',
+      recentImports: 'Recent Imports',
+      clear: 'Clear',
+      statusErrorFile: 'Please select a .docx file.',
+      statusParsing: 'Parsing…',
+      statusImporting: 'Checking for duplicates & importing…'
+    }
+    return fallbacks[key] || key
+  }
 
   async function loadHistory() {
     if (!isExtension) return
@@ -88,16 +97,21 @@
   async function handleFile(file) {
     if (!file) return
     if (!file.name.endsWith('.docx')) {
-      status = { type: 'error', text: 'Please select a .docx file.' }
+      status = { type: 'error', text: t('statusErrorFile') }
       return
     }
     currentFileName = file.name
-    status = { type: 'loading', text: 'Parsing…' }
+    status = { type: 'loading', text: t('statusParsing') }
     structure = []
     try {
       structure = await parseDocxBookmarks(file)
       const total = structure.reduce((n, f) => n + f.items.length, 0)
-      status = { type: 'success', text: `Found ${total} bookmarks across ${structure.length} folders` }
+      status = { 
+        type: 'success', 
+        text: isExtension 
+          ? t('statusSuccess', [total.toString(), structure.length.toString()])
+          : `Found ${total} bookmarks across ${structure.length} folders`
+      }
     } catch (e) {
       status = { type: 'error', text: e.message }
     }
@@ -105,7 +119,7 @@
 
   async function importToChrome() {
     if (!isExtension) return
-    status = { type: 'loading', text: 'Checking for duplicates & importing…' }
+    status = { type: 'loading', text: t('statusImporting') }
     try {
       // 1. Create a root folder for this import session within the target folder
       const rootFolder = await chrome.bookmarks.create({
@@ -146,7 +160,12 @@
         await saveToHistory(currentFileName, totalAdded)
       }
 
-      status = { type: 'success', text: `Imported ${totalAdded} bookmarks. Skipped ${totalSkipped} duplicates.` }
+      status = { 
+        type: 'success', 
+        text: isExtension 
+          ? t('statusImportSuccess', [totalAdded.toString(), totalSkipped.toString()])
+          : `Imported ${totalAdded} bookmarks. Skipped ${totalSkipped} duplicates.`
+      }
     } catch (e) {
       status = { type: 'error', text: `Import failed: ${e.message}` }
     }
@@ -194,8 +213,8 @@
       </svg>
     </div>
     <div class="header-text">
-      <h1>Docx Bookmark Importer</h1>
-      <p class="subtitle">Convert Chrome bookmarks accidentally saved as <code>.docx</code> back to importable <code>.html</code></p>
+      <h1>{t('appName')}</h1>
+      <p class="subtitle">{t('appSubtitle')}</p>
     </div>
     {#if structure.length > 0 || (status && status.type === 'error')}
       <button class="reset-btn" onclick={reset} aria-label="Reset" title="Reset">
@@ -435,7 +454,7 @@
   }
 
   .drop-label { margin: 0; font-size: 1rem; color: var(--text); }
-  .drop-label strong { color: var(--accent); }
+  .drop-label :global(strong) { color: var(--accent); }
   .or { font-size: .8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
 
   .browse-btn {

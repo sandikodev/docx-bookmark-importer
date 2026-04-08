@@ -38,5 +38,37 @@
   "clear": {
     "message": "Hapus",
     "description": "Teks tombol hapus riwayat."
+  },
+  "appSubtitle": {
+    "message": "Konversi bookmark Chrome yang tidak sengaja tersimpan sebagai .docx kembali ke .html yang dapat diimpor",
+    "description": "Subtitle aplikasi."
+  },
+  "statusErrorFile": {
+    "message": "Silakan pilih file .docx.",
+    "description": "Pesan error tipe file salah."
+  },
+  "statusParsing": {
+    "message": "Menganalisis…",
+    "description": "Pesan status saat memproses."
+  },
+  "statusSuccess": {
+    "message": "Menemukan $TOTAL$ bookmark di $FOLDERS$ folder",
+    "description": "Pesan sukses analisis.",
+    "placeholders": {
+      "total": { "content": "$1" },
+      "folders": { "content": "$2" }
+    }
+  },
+  "statusImporting": {
+    "message": "Memeriksa duplikat & mengimpor…",
+    "description": "Pesan status saat mengimpor."
+  },
+  "statusImportSuccess": {
+    "message": "Berhasil mengimpor $ADDED$ bookmark. Melewati $SKIPPED$ duplikat.",
+    "description": "Pesan sukses impor.",
+    "placeholders": {
+      "added": { "content": "$1" },
+      "skipped": { "content": "$2" }
+    }
   }
 }

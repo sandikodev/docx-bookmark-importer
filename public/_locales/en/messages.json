@@ -38,5 +38,37 @@
   "clear": {
     "message": "Clear",
     "description": "Clear history button text."
+  },
+  "appSubtitle": {
+    "message": "Convert Chrome bookmarks accidentally saved as .docx back to importable .html",
+    "description": "The subtitle of the app."
+  },
+  "statusErrorFile": {
+    "message": "Please select a .docx file.",
+    "description": "Error message for wrong file type."
+  },
+  "statusParsing": {
+    "message": "Parsing…",
+    "description": "Status message while parsing."
+  },
+  "statusSuccess": {
+    "message": "Found $TOTAL$ bookmarks across $FOLDERS$ folders",
+    "description": "Success message after parsing.",
+    "placeholders": {
+      "total": { "content": "$1" },
+      "folders": { "content": "$2" }
+    }
+  },
+  "statusImporting": {
+    "message": "Checking for duplicates & importing…",
+    "description": "Status message while importing."
+  },
+  "statusImportSuccess": {
+    "message": "Imported $ADDED$ bookmarks. Skipped $SKIPPED$ duplicates.",
+    "description": "Success message after import.",
+    "placeholders": {
+      "added": { "content": "$1" },
+      "skipped": { "content": "$2" }
+    }
   }
 }

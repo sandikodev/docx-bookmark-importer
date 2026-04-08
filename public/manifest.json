@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Docx Bookmark Importer",
+  "version": "1.0.0",
+  "description": "Convert .docx bookmarks directly into Chrome with one click.",
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": "favicon.svg"
+  },
+  "side_panel": {
+    "default_path": "index.html"
+  },
+  "icons": {
+    "48": "favicon.svg",
+    "128": "favicon.svg"
+  },
+  "permissions": [
+    "bookmarks",
+    "storage",
+    "sidePanel",
+    "contextMenus"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
+

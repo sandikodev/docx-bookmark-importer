@@ -1,0 +1,25 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logo_grad" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#3B82F6"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="256" height="256" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  
+  <rect width="256" height="256" rx="54" fill="url(#logo_grad)" filter="url(#shadow)"/>
+  
+  <!-- Abstract Document & Conversion Shape -->
+  <path d="M75 70C75 64.4772 79.4772 60 85 60H145L185 100V186C185 191.523 180.523 196 175 196H85C79.4772 196 75 191.523 75 186V70Z" fill="white" fill-opacity="0.15"/>
+  <path d="M145 60V100H185" fill="white" fill-opacity="0.2"/>
+  
+  <!-- The "Conversion" Arrow & Bookmark Hybrid -->
+  <path d="M110 80H140V145L125 135L110 145V80Z" fill="white">
+    <animate attributeName="d" values="M110 80H140V145L125 135L110 145V80Z;M110 80H140V155L125 145L110 155V80Z;M110 80H140V145L125 135L110 145V80Z" dur="3s" repeatCount="indefinite" />
+  </path>
+  
+  <path d="M100 165H156" stroke="white" stroke-width="8" stroke-linecap="round" stroke-opacity="0.6"/>
+  <path d="M100 180H135" stroke="white" stroke-width="8" stroke-linecap="round" stroke-opacity="0.4"/>
+</svg>

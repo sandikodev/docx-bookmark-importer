@@ -23,6 +23,53 @@
     }
   }
 
+  let isExtension = $state(typeof chrome !== 'undefined' && chrome.bookmarks)
+
+  let skipDuplicates = $state(true)
+
+  async function importToChrome() {
+    if (!isExtension) return
+    status = { type: 'loading', text: 'Checking for duplicates & importing…' }
+    try {
+      // 1. Create a root folder for this import session
+      const rootFolder = await chrome.bookmarks.create({
+        title: `Imported from Docx (${new Date().toLocaleDateString()})`
+      })
+
+      let totalAdded = 0
+      let totalSkipped = 0
+
+      for (const folder of structure) {
+        // Create the subfolder
+        const chromeFolder = await chrome.bookmarks.create({
+          parentId: rootFolder.id,
+          title: folder.folder
+        })
+
+        for (const item of folder.items) {
+          // Check for duplicate URLs if skipDuplicates is true
+          if (skipDuplicates) {
+            const results = await chrome.bookmarks.search({ url: item.url })
+            if (results.length > 0) {
+              totalSkipped++
+              continue
+            }
+          }
+
+          await chrome.bookmarks.create({
+            parentId: chromeFolder.id,
+            title: item.title,
+            url: item.url
+          })
+          totalAdded++
+        }
+      }
+      status = { type: 'success', text: `Imported ${totalAdded} bookmarks. Skipped ${totalSkipped} duplicates.` }
+    } catch (e) {
+      status = { type: 'error', text: `Import failed: ${e.message}` }
+    }
+  }
+
   function download() {
     const html = generateBookmarkHtml(structure)
     const a = document.createElement('a')
@@ -134,6 +181,23 @@
       {/each}
     </div>
 
+    {#if isExtension}
+      <div class="options-bar" transition:fade>
+        <label class="toggle">
+          <input type="checkbox" bind:checked={skipDuplicates} />
+          <span class="slider"></span>
+          <span class="label-text">Skip duplicate URLs</span>
+        </label>
+      </div>
+
+      <button class="import-btn" onclick={importToChrome} transition:fade>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="8" x2="12" y2="8.01"/><line x1="12" y1="16" x2="12" y2="16.01"/><line x1="8" y1="12" x2="8.01" y2="12"/><line x1="16" y1="12" x2="16.01" y2="12"/>
+        </svg>
+        Import to Chrome
+      </button>
+    {/if}
+
     <button class="download-btn" onclick={download} transition:fade>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Download bookmarks.html
@@ -148,15 +212,21 @@
 <style>
   .card {
     width: 100%;
-    max-width: 500px;
+    max-width: 100%; /* Menyesuaikan dengan lebar Side Panel */
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 2.5rem;
-    box-shadow: var(--shadow-md);
+    border: none; /* Hilangkan border di Side Panel untuk tampilan lebih bersih */
+    border-radius: 0; /* Menempel ke pinggir di Side Panel */
+    padding: 1.5rem; /* Kurangi sedikit padding agar hemat ruang */
+    min-height: 100vh; /* Agar memenuhi seluruh Side Panel */
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
+    box-shadow: none; /* Tidak butuh bayangan di Side Panel */
+  }
+
+  /* Jika dijalankan di Popup (lebar biasanya < 400px), beri radius lagi */
+  @media (max-width: 600px) {
+    :global(body) { padding: 0; } /* Gunakan :global untuk menargetkan body */
   }
 
   header {
@@ -372,6 +442,64 @@
     text-overflow: ellipsis;
   }
   li a:hover { color: var(--accent); text-decoration: underline; }
+
+  /* Options Bar */
+  .options-bar {
+    background: var(--bg);
+    padding: .75rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .toggle {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    cursor: pointer;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .toggle input { display: none; }
+  .slider {
+    width: 32px; height: 18px;
+    background: var(--text-muted);
+    border-radius: 20px;
+    position: relative;
+    transition: background .2s;
+  }
+  .slider::before {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    background: white;
+    border-radius: 50%;
+    top: 2px; left: 2px;
+    transition: transform .2s;
+  }
+  .toggle input:checked + .slider { background: var(--accent); }
+  .toggle input:checked + .slider::before { transform: translateX(14px); }
+
+  /* Chrome Import Button */
+  .import-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .65rem;
+    width: 100%;
+    background: var(--surface);
+    color: var(--accent);
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    padding: .85rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .import-btn:hover { background: var(--accent-light); transform: translateY(-1px); }
+  .import-btn:active { transform: translateY(0); }
 
   /* Download button */
   .download-btn {

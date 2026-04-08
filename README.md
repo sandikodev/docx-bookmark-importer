@@ -1,109 +1,50 @@
-# Docx Bookmark Importer
+<div align="center">
+  <img src="public/logo.svg" width="128" height="128" alt="Docx Bookmark Importer Logo" />
+  <h1>Docx Bookmark Importer</h1>
+  <p><em>Advanced conversion tool for .docx bookmark recovery.</em></p>
 
-Convert Chrome bookmark export accidentally saved as `.docx` back to importable `.html` format.
+  <img src="public/mascot.svg" width="256" alt="Byte-Bot Assistant" />
+  
+  <p>
+    <img src="https://img.shields.io/badge/Author-sandikodev-6366F1?style=for-the-badge" alt="Author sandikodev" />
+    <img src="https://img.shields.io/badge/Svelte-5-ff3e00?style=for-the-badge&logo=svelte" alt="Svelte 5" />
+    <img src="https://img.shields.io/badge/Vite-6.0-646CFF?style=for-the-badge&logo=vite" alt="Vite" />
+    <img src="https://img.shields.io/badge/Chrome-Extension-4285F4?style=for-the-badge&logo=google-chrome" alt="Chrome Extension" />
+  </p>
+</div>
 
-## The Problem
+<hr />
 
-Chrome's "Export bookmarks" feature saves a `.html` file. On some Windows 11 setups, the file dialog defaults to saving as `.docx` (Word Document) instead. Simply renaming the extension doesn't work — the file is a real `.docx` (ZIP-based XML), not HTML.
+## 🛠 Project Overview
+**Docx Bookmark Importer** is a high-performance utility designed to parse internal XML structures of `.docx` files to extract bookmarks and export them as a standard, importable Netscape HTML file. This tool is specifically built to recover bookmarks that were accidentally saved or exported into Microsoft Word format.
 
-## How It Works
+## ✨ Core Capabilities
+- **Precision Extraction:** Advanced parsing of Word's internal hyperlink and heading (`w:pStyle w:val="Heading3"`) structures.
+- **Modern Architecture:** Built with **Svelte 5 (Runes)** for reactive performance and minimal bundle size.
+- **Seamless Workflow:** Global window drag-and-drop listener allows for instant file processing.
+- **Privacy-Centric:** 100% local execution. No server-side processing or data transmission.
+- **Dark Mode Support:** Fully responsive and themed for both light and dark system preferences.
 
-A `.docx` file is a ZIP archive containing XML files. The bookmark data is stored as:
-- `word/_rels/document.xml.rels` — hyperlink ID → URL mapping
-- `word/document.xml` — document structure with `Heading3` paragraphs as folder names and `<w:hyperlink>` elements as bookmark entries
+## 🚀 Deployment & Installation
 
-## Origin: Python Prototype
+### Web Interface
+1. Clone the repository.
+2. `pnpm install`
+3. `pnpm dev`
 
-This project started as a Python script to validate the approach:
+### Chrome Extension
+1. Build assets: `pnpm build`
+2. Navigate to `chrome://extensions/` in your browser.
+3. Enable **Developer Mode**.
+4. Click **Load unpacked** and select the `dist` folder.
 
-```python
-import zipfile, re, time, html as htmllib
+## 📋 Technology Stack
+- **Framework:** Svelte 5
+- **Parsing Engine:** JSZip & Custom XML Parser
+- **Build Tool:** Vite 6
+- **Styling:** Vanilla CSS (Custom Properties)
 
-with zipfile.ZipFile('bookmarks_4_6_26.docx') as z:
-    rels_xml = z.read('word/_rels/document.xml.rels').decode()
-    doc_xml  = z.read('word/document.xml').decode()
-
-rel_map = {m.group(1): m.group(2)
-           for m in re.finditer(r'Id="(rId\d+)"[^>]*Target="(https?://[^"]+)"', rels_xml)}
-
-paras = re.findall(r'<w:p[ >].*?</w:p>', doc_xml, re.DOTALL)
-ts = int(time.time())
-
-structure = []
-current_folder = None
-current_items  = []
-
-for p in paras:
-    pstyle = re.search(r'<w:pStyle w:val="([^"]+)"', p)
-    style  = pstyle.group(1) if pstyle else ''
-    texts  = ''.join(re.findall(r'<w:t[^>]*>([^<]+)</w:t>', p)).strip()
-
-    if style == 'Heading3' and texts:
-        if current_folder is not None:
-            structure.append((current_folder, current_items))
-        current_folder = htmllib.unescape(texts)
-        current_items  = []
-    elif 'w:hyperlink' in p:
-        for m in re.finditer(r'r:id="(rId\d+)">(.*?)</w:hyperlink>', p, re.DOTALL):
-            rid, inner = m.group(1), m.group(2)
-            if rid not in rel_map:
-                continue
-            title = htmllib.unescape(''.join(re.findall(r'<w:t[^>]*>([^<]+)</w:t>', inner)).strip())
-            url   = htmllib.unescape(rel_map[rid])
-            if title:
-                current_items.append((title, url))
-
-if current_folder is not None:
-    structure.append((current_folder, current_items))
-
-lines = [
-    '<!DOCTYPE NETSCAPE-Bookmark-file-1>',
-    '<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">',
-    '<TITLE>Bookmarks</TITLE>',
-    '<H1>Bookmarks</H1>',
-    '<DL><p>',
-    f'    <DT><H3 ADD_DATE="{ts}" PERSONAL_TOOLBAR_FOLDER="true">Bookmarks bar</H3>',
-    '    <DL><p>',
-    '    </DL><p>',
-]
-for folder, items in structure:
-    lines.append(f'    <DT><H3 ADD_DATE="{ts}">{folder}</H3>')
-    lines.append('    <DL><p>')
-    for title, url in items:
-        lines.append(f'        <DT><A HREF="{url}" ADD_DATE="{ts}">{title}</A>')
-    lines.append('    </DL><p>')
-lines.append('</DL><p>')
-
-with open('bookmarks_recovered.html', 'w', encoding='utf-8') as f:
-    f.write('\n'.join(lines))
-```
-
-The script successfully recovered **66 bookmarks across 5 folders** from the corrupted file, which confirmed the approach before porting to JavaScript.
-
-## Web App (Svelte + Vite)
-
-The logic was ported to a Svelte web app so anyone can use it without installing Python.
-
-### Stack
-- **Svelte** — minimal bundle, no runtime framework overhead
-- **Vite** — fast build tooling
-- **JSZip** — read `.docx` (ZIP) in the browser
-
-### Usage
-
-```bash
-pnpm install
-pnpm dev
-```
-
-Open `http://localhost:5173`, drag & drop your `.docx` file, preview the folder structure, then download `bookmarks.html`.
-
-### Import to Chrome
-
-1. Open `chrome://bookmarks/`
-2. Click `⋮` → **Import bookmarks**
-3. Select the downloaded `bookmarks.html`
-
-## License
-
-MIT
+<hr />
+<div align="center">
+  <p>Maintained and Authored by <strong>sandikodev</strong></p>
+</div>

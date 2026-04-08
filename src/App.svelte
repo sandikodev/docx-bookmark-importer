@@ -6,27 +6,37 @@
   let structure = $state([])
   let dragging = $state(false)
 
-  async function handleFile(file) {
-    if (!file) return
-    if (!file.name.endsWith('.docx')) {
-      status = { type: 'error', text: 'Please select a .docx file.' }
-      return
-    }
-    status = { type: 'loading', text: 'Parsing…' }
-    structure = []
-    try {
-      structure = await parseDocxBookmarks(file)
-      const total = structure.reduce((n, f) => n + f.items.length, 0)
-      status = { type: 'success', text: `Found ${total} bookmarks across ${structure.length} folders` }
-    } catch (e) {
-      status = { type: 'error', text: e.message }
-    }
-  }
-
   let isExtension = $state(typeof chrome !== 'undefined' && chrome.bookmarks)
   let skipDuplicates = $state(true)
   let chromeFolders = $state([])
   let targetFolderId = $state('1') // Default ke '1' (Bookmarks Bar)
+  let history = $state([])
+  let currentFileName = ''
+
+  async function loadHistory() {
+    if (!isExtension) return
+    const data = await chrome.storage.local.get('importHistory')
+    history = data.importHistory || []
+  }
+
+  async function saveToHistory(fileName, count) {
+    if (!isExtension) return
+    const newEntry = {
+      id: Date.now(),
+      date: new Date().toLocaleString(),
+      fileName,
+      count
+    }
+    const updatedHistory = [newEntry, ...history].slice(0, 10)
+    await chrome.storage.local.set({ importHistory: updatedHistory })
+    history = updatedHistory
+  }
+
+  async function clearHistory() {
+    if (!isExtension) return
+    await chrome.storage.local.remove('importHistory')
+    history = []
+  }
 
   async function loadChromeFolders() {
     if (!isExtension) return
@@ -46,8 +56,29 @@
   }
 
   $effect(() => {
-    if (isExtension) loadChromeFolders()
+    if (isExtension) {
+      loadChromeFolders()
+      loadHistory()
+    }
   })
+
+  async function handleFile(file) {
+    if (!file) return
+    if (!file.name.endsWith('.docx')) {
+      status = { type: 'error', text: 'Please select a .docx file.' }
+      return
+    }
+    currentFileName = file.name
+    status = { type: 'loading', text: 'Parsing…' }
+    structure = []
+    try {
+      structure = await parseDocxBookmarks(file)
+      const total = structure.reduce((n, f) => n + f.items.length, 0)
+      status = { type: 'success', text: `Found ${total} bookmarks across ${structure.length} folders` }
+    } catch (e) {
+      status = { type: 'error', text: e.message }
+    }
+  }
 
   async function importToChrome() {
     if (!isExtension) return
@@ -87,6 +118,11 @@
           totalAdded++
         }
       }
+
+      if (totalAdded > 0) {
+        await saveToHistory(currentFileName, totalAdded)
+      }
+
       status = { type: 'success', text: `Imported ${totalAdded} bookmarks. Skipped ${totalSkipped} duplicates.` }
     } catch (e) {
       status = { type: 'error', text: `Import failed: ${e.message}` }
@@ -238,6 +274,26 @@
     <p class="hint" transition:fade>
       Import: open <code>chrome://bookmarks/</code> → <code>⋮</code> → <strong>Import bookmarks</strong>
     </p>
+  {/if}
+
+  {#if isExtension && history.length > 0}
+    <div class="history-section" transition:slide>
+      <div class="history-header">
+        <h2>Recent Imports</h2>
+        <button class="clear-btn" onclick={clearHistory}>Clear</button>
+      </div>
+      <div class="history-list">
+        {#each history as entry (entry.id)}
+          <div class="history-item" transition:fade>
+            <div class="history-info">
+              <span class="file-name">{entry.fileName}</span>
+              <span class="date">{entry.date}</span>
+            </div>
+            <span class="count">+{entry.count}</span>
+          </div>
+        {/each}
+      </div>
+    </div>
   {/if}
 </div>
 
@@ -585,4 +641,85 @@
     text-align: center;
   }
   .hint code { background: var(--border); color: var(--text); }
+
+  /* History Section */
+  .history-section {
+    margin-top: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .history-header h2 {
+    font-size: .875rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+
+  .clear-btn {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-size: .75rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .clear-btn:hover { background: var(--accent-light); }
+
+  .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+
+  .history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg);
+    padding: .65rem .85rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .history-info {
+    display: flex;
+    flex-direction: column;
+    gap: .1rem;
+    min-width: 0;
+  }
+
+  .file-name {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--text-heading);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .date {
+    font-size: .7rem;
+    color: var(--text-muted);
+  }
+
+  .count {
+    font-size: .75rem;
+    font-weight: 800;
+    color: var(--success);
+    background: var(--success-light);
+    padding: 2px 8px;
+    border-radius: 99px;
+  }
 </style>

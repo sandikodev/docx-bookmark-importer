@@ -30,7 +30,7 @@ A specialized Svelte 5 web application for converting Chrome bookmarks that were
   - [x] Side Panel Support
   - [x] Background Service Worker & Context Menus
 - [x] Phase 2: UX & Productivity
-  - [ ] Smart Mapping (Pick target folder visually)
+  - [x] Smart Mapping (Visual folder selection)
   - [x] Duplicate URL Detection (Toggle in UI)
   - [ ] History Log (Last 10 imports)
 - [ ] Phase 3: Marketplace Readiness

@@ -24,15 +24,38 @@
   }
 
   let isExtension = $state(typeof chrome !== 'undefined' && chrome.bookmarks)
-
   let skipDuplicates = $state(true)
+  let chromeFolders = $state([])
+  let targetFolderId = $state('1') // Default ke '1' (Bookmarks Bar)
+
+  async function loadChromeFolders() {
+    if (!isExtension) return
+    const tree = await chrome.bookmarks.getTree()
+    const folders = []
+    
+    function walk(nodes) {
+      for (const node of nodes) {
+        if (node.children) {
+          folders.push({ id: node.id, title: node.title || 'Root' })
+          walk(node.children)
+        }
+      }
+    }
+    walk(tree)
+    chromeFolders = folders
+  }
+
+  $effect(() => {
+    if (isExtension) loadChromeFolders()
+  })
 
   async function importToChrome() {
     if (!isExtension) return
     status = { type: 'loading', text: 'Checking for duplicates & importing…' }
     try {
-      // 1. Create a root folder for this import session
+      // 1. Create a root folder for this import session within the target folder
       const rootFolder = await chrome.bookmarks.create({
+        parentId: targetFolderId,
         title: `Imported from Docx (${new Date().toLocaleDateString()})`
       })
 
@@ -183,6 +206,15 @@
 
     {#if isExtension}
       <div class="options-bar" transition:fade>
+        <div class="option-row">
+          <label for="targetFolder">Import into:</label>
+          <select id="targetFolder" bind:value={targetFolderId}>
+            {#each chromeFolders as folder}
+              <option value={folder.id}>{folder.title || 'Root'}</option>
+            {/each}
+          </select>
+        </div>
+        
         <label class="toggle">
           <input type="checkbox" bind:checked={skipDuplicates} />
           <span class="slider"></span>
@@ -446,10 +478,34 @@
   /* Options Bar */
   .options-bar {
     background: var(--bg);
-    padding: .75rem 1rem;
-    border-radius: 10px;
+    padding: 1rem;
+    border-radius: 12px;
     border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
   }
+
+  .option-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: .85rem;
+    font-weight: 600;
+  }
+
+  select {
+    flex: 1;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .35rem .5rem;
+    font-size: .8rem;
+    outline: none;
+  }
+  select:focus { border-color: var(--accent); }
 
   .toggle {
     display: flex;

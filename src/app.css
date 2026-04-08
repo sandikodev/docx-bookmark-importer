@@ -15,19 +15,19 @@
   --success-light: #ecfdf5;
   --error: #dc2626;
   --error-light: #fef2f2;
-  --radius: 10px;
+  --radius: 12px;
   --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,.08), 0 2px 4px -1px rgba(0,0,0,.05);
+  --shadow-md: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0f1117;
-    --surface: #1a1d27;
-    --border: #2d3148;
-    --text: #9ca3af;
-    --text-muted: #6b7280;
-    --text-heading: #f9fafb;
+    --bg: #0b0e14;
+    --surface: #161a23;
+    --border: #232a3b;
+    --text: #a1a1aa;
+    --text-muted: #71717a;
+    --text-heading: #f4f4f5;
     --accent: #818cf8;
     --accent-hover: #6366f1;
     --accent-light: rgba(99,102,241,.12);
@@ -47,7 +47,23 @@ body {
   -webkit-font-smoothing: antialiased;
   min-height: 100svh;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: 2rem 1rem 4rem;
+  padding: 1.5rem;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }

@@ -1,4 +1,5 @@
 <script>
+  import { fade, slide } from 'svelte/transition'
   import { parseDocxBookmarks, generateBookmarkHtml } from './lib/parser.js'
 
   let status = $state(null)   // { type: 'loading'|'success'|'error', text: string }
@@ -30,7 +31,13 @@
     a.click()
   }
 
+  function reset() {
+    status = null
+    structure = []
+  }
+
   function onDrop(e) {
+    e.preventDefault()
     dragging = false
     handleFile(e.dataTransfer.files[0])
   }
@@ -41,7 +48,13 @@
   }
 </script>
 
-<div class="card">
+<svelte:window
+  ondragover={(e) => { e.preventDefault(); dragging = true }}
+  ondragleave={() => dragging = false}
+  ondrop={onDrop}
+/>
+
+<div class="card" transition:fade>
   <header>
     <div class="icon-wrap">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -51,33 +64,43 @@
         <line x1="9" y1="15" x2="15" y2="15"/>
       </svg>
     </div>
-    <div>
+    <div class="header-text">
       <h1>Docx Bookmark Importer</h1>
       <p class="subtitle">Convert Chrome bookmarks accidentally saved as <code>.docx</code> back to importable <code>.html</code></p>
     </div>
+    {#if structure.length > 0 || (status && status.type === 'error')}
+      <button class="reset-btn" onclick={reset} aria-label="Reset" title="Reset">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      </button>
+    {/if}
   </header>
 
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <label
-    class="dropzone"
-    class:active={dragging}
-    ondragover={(e) => { e.preventDefault(); dragging = true }}
-    ondragleave={() => dragging = false}
-    ondrop={onDrop}
-  >
-    <svg class="drop-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="16 16 12 12 8 16"/>
-      <line x1="12" y1="12" x2="12" y2="21"/>
-      <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-    </svg>
-    <p class="drop-label">Drag & drop your <code>.docx</code> file here</p>
-    <span class="or">or</span>
-    <span class="browse-btn">Browse file</span>
-    <input type="file" accept=".docx" onchange={onInputChange} />
-  </label>
+  {#if structure.length === 0}
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <label
+      class="dropzone"
+      class:active={dragging}
+      ondragover={(e) => { e.preventDefault(); dragging = true }}
+      ondragleave={() => dragging = false}
+      ondrop={onDrop}
+      transition:slide
+    >
+      <div class="drop-circle">
+        <svg class="drop-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 16 12 12 8 16"/>
+          <line x1="12" y1="12" x2="12" y2="21"/>
+          <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+        </svg>
+      </div>
+      <p class="drop-label">Drag & drop your <strong>.docx</strong> file here</p>
+      <span class="or">or</span>
+      <span class="browse-btn">Browse file</span>
+      <input type="file" accept=".docx" onchange={onInputChange} />
+    </label>
+  {/if}
 
   {#if status}
-    <div class="status {status.type}">
+    <div class="status {status.type}" transition:slide>
       {#if status.type === 'loading'}
         <span class="spinner"></span>
       {:else if status.type === 'success'}
@@ -90,13 +113,14 @@
   {/if}
 
   {#if structure.length > 0}
-    <div class="preview">
+    <div class="preview" transition:slide>
       {#each structure as { folder, items }}
-        <details>
+        <details open={structure.length < 3}>
           <summary>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-8l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z"/></svg>
+            <svg class="folder-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-8l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z"/></svg>
             <span>{folder}</span>
             <span class="badge">{items.length}</span>
+            <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </summary>
           <ul>
             {#each items as { title, url }}
@@ -110,12 +134,12 @@
       {/each}
     </div>
 
-    <button class="download-btn" onclick={download}>
+    <button class="download-btn" onclick={download} transition:fade>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Download bookmarks.html
     </button>
 
-    <p class="hint">
+    <p class="hint" transition:fade>
       Import: open <code>chrome://bookmarks/</code> → <code>⋮</code> → <strong>Import bookmarks</strong>
     </p>
   {/if}
@@ -124,55 +148,69 @@
 <style>
   .card {
     width: 100%;
-    max-width: 600px;
+    max-width: 500px;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 2rem;
+    border-radius: 20px;
+    padding: 2.5rem;
     box-shadow: var(--shadow-md);
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1.5rem;
   }
 
   header {
     display: flex;
-    align-items: flex-start;
-    gap: 1rem;
+    align-items: center;
+    gap: 1.25rem;
+    position: relative;
   }
+
+  .header-text { flex: 1; min-width: 0; }
 
   .icon-wrap {
     flex-shrink: 0;
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     background: var(--accent-light);
     color: var(--accent);
-    border-radius: 12px;
+    border-radius: 14px;
     display: grid;
     place-items: center;
   }
 
   h1 {
-    margin: 0 0 .2rem;
-    font-size: 1.15rem;
-    font-weight: 600;
+    margin: 0 0 .25rem;
+    font-size: 1.25rem;
+    font-weight: 700;
     color: var(--text-heading);
-    line-height: 1.3;
+    letter-spacing: -0.01em;
   }
 
   .subtitle {
     margin: 0;
-    font-size: .85rem;
+    font-size: .875rem;
     color: var(--text-muted);
-    line-height: 1.5;
+    line-height: 1.45;
   }
 
+  .reset-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all .2s;
+  }
+  .reset-btn:hover { background: var(--border); color: var(--text-heading); }
+
   code {
-    font-family: ui-monospace, Consolas, monospace;
-    font-size: .8em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: .85em;
     background: var(--accent-light);
     color: var(--accent);
-    padding: 1px 5px;
+    padding: 2px 4px;
     border-radius: 4px;
   }
 
@@ -181,55 +219,74 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: .5rem;
+    gap: .75rem;
     border: 2px dashed var(--border);
-    border-radius: var(--radius);
-    padding: 2rem 1rem;
+    border-radius: 16px;
+    padding: 3rem 1.5rem;
     cursor: pointer;
-    transition: border-color .2s, background .2s;
+    transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
     text-align: center;
+    background: rgba(var(--accent-light), 0.3);
   }
   .dropzone:hover, .dropzone.active {
     border-color: var(--accent);
     background: var(--accent-light);
+    transform: translateY(-2px);
   }
+  .dropzone.active { scale: 1.02; border-style: solid; }
   .dropzone input { display: none; }
 
-  .drop-icon { color: var(--text-muted); }
-  .dropzone:hover .drop-icon, .dropzone.active .drop-icon { color: var(--accent); }
+  .drop-circle {
+    width: 64px;
+    height: 64px;
+    background: var(--surface);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    box-shadow: var(--shadow);
+    color: var(--text-muted);
+    transition: all .25s;
+    margin-bottom: .5rem;
+  }
+  .dropzone:hover .drop-circle, .dropzone.active .drop-circle {
+    color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-border);
+  }
 
-  .drop-label { margin: 0; font-size: .9rem; color: var(--text); }
-  .or { font-size: .8rem; color: var(--text-muted); }
+  .drop-label { margin: 0; font-size: 1rem; color: var(--text); }
+  .drop-label strong { color: var(--accent); }
+  .or { font-size: .8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
 
   .browse-btn {
-    font-size: .85rem;
-    font-weight: 500;
+    font-size: .875rem;
+    font-weight: 600;
     color: var(--accent);
-    background: var(--accent-light);
+    background: var(--surface);
     border: 1px solid var(--accent-border);
-    border-radius: 6px;
-    padding: .35rem .9rem;
-    transition: background .15s;
+    border-radius: 8px;
+    padding: .5rem 1.25rem;
+    box-shadow: var(--shadow);
+    transition: all .2s;
   }
-  .dropzone:hover .browse-btn { background: var(--accent-border); }
+  .dropzone:hover .browse-btn { border-color: var(--accent); background: var(--accent-light); }
 
   /* Status */
   .status {
     display: flex;
     align-items: center;
-    gap: .5rem;
+    gap: .75rem;
     font-size: .875rem;
-    font-weight: 500;
-    padding: .65rem 1rem;
-    border-radius: var(--radius);
+    font-weight: 600;
+    padding: .85rem 1.25rem;
+    border-radius: 12px;
     border: 1px solid transparent;
   }
   .status.loading { background: var(--accent-light); color: var(--accent); border-color: var(--accent-border); }
-  .status.success { background: var(--success-light); color: var(--success); border-color: color-mix(in srgb, var(--success) 30%, transparent); }
-  .status.error   { background: var(--error-light);   color: var(--error);   border-color: color-mix(in srgb, var(--error) 30%, transparent); }
+  .status.success { background: var(--success-light); color: var(--success); border-color: color-mix(in srgb, var(--success) 20%, transparent); }
+  .status.error   { background: var(--error-light);   color: var(--error);   border-color: color-mix(in srgb, var(--error) 20%, transparent); }
 
   .spinner {
-    width: 14px; height: 14px;
+    width: 16px; height: 16px;
     border: 2px solid currentColor;
     border-top-color: transparent;
     border-radius: 50%;
@@ -241,68 +298,78 @@
   /* Preview */
   .preview {
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 14px;
     overflow: hidden;
-    max-height: 320px;
+    max-height: 380px;
     overflow-y: auto;
+    background: var(--surface);
   }
 
-  details {
-    border-bottom: 1px solid var(--border);
-  }
+  details { border-bottom: 1px solid var(--border); }
   details:last-child { border-bottom: none; }
 
   summary {
     display: flex;
     align-items: center;
-    gap: .5rem;
-    padding: .65rem 1rem;
+    gap: .75rem;
+    padding: .85rem 1.25rem;
     cursor: pointer;
-    font-size: .875rem;
+    font-size: .9rem;
     font-weight: 600;
     color: var(--text-heading);
     list-style: none;
     user-select: none;
-    transition: background .15s;
+    transition: background .2s;
   }
   summary::-webkit-details-marker { display: none; }
   summary:hover { background: var(--accent-light); }
-  summary svg { color: var(--accent); flex-shrink: 0; }
+  
+  .folder-icon { color: var(--accent); flex-shrink: 0; opacity: 0.8; }
   summary span:nth-child(2) { flex: 1; }
 
   .badge {
     font-size: .75rem;
-    font-weight: 500;
-    background: var(--accent-light);
-    color: var(--accent);
-    border: 1px solid var(--accent-border);
-    border-radius: 99px;
-    padding: 1px 8px;
+    font-weight: 700;
+    background: var(--bg);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1px 6px;
+    margin-right: 4px;
   }
+
+  .chevron {
+    color: var(--text-muted);
+    transition: transform .3s;
+    opacity: 0.5;
+  }
+  details[open] .chevron { transform: rotate(180deg); opacity: 1; color: var(--accent); }
 
   ul {
     margin: 0;
     padding: 0;
     list-style: none;
-    background: var(--bg);
+    background: color-mix(in srgb, var(--bg) 50%, transparent);
   }
   li {
     display: flex;
     align-items: center;
-    gap: .5rem;
-    padding: .4rem 1rem .4rem 2.25rem;
+    gap: .75rem;
+    padding: .6rem 1.25rem .6rem 2.75rem;
     border-top: 1px solid var(--border);
     min-width: 0;
+    transition: background .15s;
   }
-  .favicon { flex-shrink: 0; opacity: .8; }
+  li:hover { background: var(--surface); }
+  .favicon { flex-shrink: 0; filter: grayscale(0.2); transition: filter .2s; }
+  li:hover .favicon { filter: grayscale(0); }
   li a {
-    font-size: .82rem;
+    font-size: .85rem;
     color: var(--text);
     text-decoration: none;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    transition: color .15s;
   }
   li a:hover { color: var(--accent); text-decoration: underline; }
 
@@ -311,26 +378,27 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: .5rem;
+    gap: .65rem;
     width: 100%;
     background: var(--accent);
     color: #fff;
     border: none;
-    border-radius: var(--radius);
-    padding: .75rem 1.5rem;
-    font-size: .95rem;
-    font-weight: 600;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: background .15s, transform .1s;
+    transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 30%, transparent);
   }
-  .download-btn:hover { background: var(--accent-hover); }
-  .download-btn:active { transform: scale(.98); }
+  .download-btn:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 40%, transparent); }
+  .download-btn:active { transform: translateY(0); }
 
   .hint {
     margin: 0;
-    font-size: .8rem;
+    font-size: .825rem;
     color: var(--text-muted);
     text-align: center;
   }
-  .hint strong { color: var(--text); }
+  .hint code { background: var(--border); color: var(--text); }
 </style>

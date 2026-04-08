@@ -1,0 +1,42 @@
+{
+  "appName": {
+    "message": "Docx Bookmark Importer",
+    "description": "The name of the extension."
+  },
+  "appDescription": {
+    "message": "Convert .docx bookmarks directly into Chrome with one click.",
+    "description": "The description of the extension."
+  },
+  "dropLabel": {
+    "message": "Drag & drop your .docx file here",
+    "description": "Label for the file dropzone."
+  },
+  "browseFile": {
+    "message": "Browse file",
+    "description": "Button text to browse files."
+  },
+  "importToChrome": {
+    "message": "Import to Chrome",
+    "description": "Button to import bookmarks directly."
+  },
+  "downloadHtml": {
+    "message": "Download bookmarks.html",
+    "description": "Button to download as HTML file."
+  },
+  "skipDuplicates": {
+    "message": "Skip duplicate URLs",
+    "description": "Option to skip existing bookmarks."
+  },
+  "importInto": {
+    "message": "Import into:",
+    "description": "Label for folder selection."
+  },
+  "recentImports": {
+    "message": "Recent Imports",
+    "description": "Header for history section."
+  },
+  "clear": {
+    "message": "Clear",
+    "description": "Clear history button text."
+  }
+}

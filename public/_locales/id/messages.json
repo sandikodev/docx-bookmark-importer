@@ -1,0 +1,42 @@
+{
+  "appName": {
+    "message": "Pengimpor Bookmark Docx",
+    "description": "Nama ekstensi."
+  },
+  "appDescription": {
+    "message": "Konversi bookmark .docx langsung ke Chrome dengan satu klik.",
+    "description": "Deskripsi ekstensi."
+  },
+  "dropLabel": {
+    "message": "Seret & letakkan file .docx Anda di sini",
+    "description": "Label untuk area jatuhkan file."
+  },
+  "browseFile": {
+    "message": "Pilih file",
+    "description": "Teks tombol untuk memilih file."
+  },
+  "importToChrome": {
+    "message": "Impor ke Chrome",
+    "description": "Tombol untuk mengimpor bookmark langsung."
+  },
+  "downloadHtml": {
+    "message": "Unduh bookmarks.html",
+    "description": "Tombol untuk mengunduh sebagai file HTML."
+  },
+  "skipDuplicates": {
+    "message": "Lewati URL duplikat",
+    "description": "Opsi untuk melewati bookmark yang sudah ada."
+  },
+  "importInto": {
+    "message": "Impor ke:",
+    "description": "Label untuk pemilihan folder."
+  },
+  "recentImports": {
+    "message": "Impor Terakhir",
+    "description": "Header untuk bagian riwayat."
+  },
+  "clear": {
+    "message": "Hapus",
+    "description": "Teks tombol hapus riwayat."
+  }
+}

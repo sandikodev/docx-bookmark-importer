@@ -13,6 +13,18 @@
   let history = $state([])
   let currentFileName = ''
 
+  // i18n helper
+  const t = (key) => isExtension ? chrome.i18n.getMessage(key) : {
+    dropLabel: 'Drag & drop your .docx file here',
+    browseFile: 'Browse file',
+    importToChrome: 'Import to Chrome',
+    downloadHtml: 'Download bookmarks.html',
+    skipDuplicates: 'Skip duplicate URLs',
+    importInto: 'Import into:',
+    recentImports: 'Recent Imports',
+    clear: 'Clear'
+  }[key] || key
+
   async function loadHistory() {
     if (!isExtension) return
     const data = await chrome.storage.local.get('importHistory')
@@ -55,10 +67,21 @@
     chromeFolders = folders
   }
 
+  async function loadPreferences() {
+    if (!isExtension) return
+    const prefs = await chrome.storage.local.get({
+      preferredFolderId: '1',
+      autoSkipDuplicates: true
+    })
+    targetFolderId = prefs.preferredFolderId
+    skipDuplicates = prefs.autoSkipDuplicates
+  }
+
   $effect(() => {
     if (isExtension) {
       loadChromeFolders()
       loadHistory()
+      loadPreferences()
     }
   })
 
@@ -198,9 +221,9 @@
           <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
         </svg>
       </div>
-      <p class="drop-label">Drag & drop your <strong>.docx</strong> file here</p>
+      <p class="drop-label">{@html t('dropLabel').replace('.docx', '<strong>.docx</strong>')}</p>
       <span class="or">or</span>
-      <span class="browse-btn">Browse file</span>
+      <span class="browse-btn">{t('browseFile')}</span>
       <input type="file" accept=".docx" onchange={onInputChange} />
     </label>
   {/if}
@@ -243,7 +266,7 @@
     {#if isExtension}
       <div class="options-bar" transition:fade>
         <div class="option-row">
-          <label for="targetFolder">Import into:</label>
+          <label for="targetFolder">{t('importInto')}</label>
           <select id="targetFolder" bind:value={targetFolderId}>
             {#each chromeFolders as folder}
               <option value={folder.id}>{folder.title || 'Root'}</option>
@@ -254,7 +277,7 @@
         <label class="toggle">
           <input type="checkbox" bind:checked={skipDuplicates} />
           <span class="slider"></span>
-          <span class="label-text">Skip duplicate URLs</span>
+          <span class="label-text">{t('skipDuplicates')}</span>
         </label>
       </div>
 
@@ -262,13 +285,13 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="8" x2="12" y2="8.01"/><line x1="12" y1="16" x2="12" y2="16.01"/><line x1="8" y1="12" x2="8.01" y2="12"/><line x1="16" y1="12" x2="16.01" y2="12"/>
         </svg>
-        Import to Chrome
+        {t('importToChrome')}
       </button>
     {/if}
 
     <button class="download-btn" onclick={download} transition:fade>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Download bookmarks.html
+      {t('downloadHtml')}
     </button>
 
     <p class="hint" transition:fade>
@@ -279,8 +302,8 @@
   {#if isExtension && history.length > 0}
     <div class="history-section" transition:slide>
       <div class="history-header">
-        <h2>Recent Imports</h2>
-        <button class="clear-btn" onclick={clearHistory}>Clear</button>
+        <h2>{t('recentImports')}</h2>
+        <button class="clear-btn" onclick={clearHistory}>{t('clear')}</button>
       </div>
       <div class="history-list">
         {#each history as entry (entry.id)}

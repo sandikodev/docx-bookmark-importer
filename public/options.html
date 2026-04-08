@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Options - Docx Bookmark Importer</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 2rem;
+      max-width: 600px;
+      margin: 0 auto;
+      background: #f9fafb;
+      color: #374151;
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 1.5rem; }
+    .card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .option-group { margin-bottom: 1.5rem; }
+    label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
+    .description { font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem; }
+    select, input[type="text"] {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    .status {
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      color: #059669;
+      display: none;
+    }
+    button {
+      background: #4f46e5;
+      color: white;
+      border: none;
+      padding: 0.625rem 1.25rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: #4338ca; }
+  </style>
+</head>
+<body>
+  <h1>Settings</h1>
+  <div class="card">
+    <div class="option-group">
+      <label for="defaultFolder">Default Target Folder</label>
+      <div class="description">Select where you want your bookmarks to be imported by default.</div>
+      <select id="defaultFolder">
+        <option value="1">Bookmarks Bar</option>
+        <option value="2">Other Bookmarks</option>
+      </select>
+    </div>
+
+    <div class="option-group">
+      <label>
+        <input type="checkbox" id="autoSkip"> Auto-skip duplicate URLs
+      </label>
+    </div>
+
+    <button id="save">Save Settings</button>
+    <div id="status" class="status">Options saved!</div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
